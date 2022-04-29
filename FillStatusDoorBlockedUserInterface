@@ -1,0 +1,173 @@
+#include <SharpIR.h>
+#define IRPin A0
+#define model 1080
+#include <ezButton.h>
+#include <LiquidCrystal.h>  
+
+const int rs = 32, en = 34, d4 = 36, d5 = 38, d6 = 40, d7 = 42;
+const int ledPin = 6;
+const int pingPin1 = 4; // Trigger Pin of Ultrasonic Sensor for can radius
+const int echoPin1= 5; // Echo Pin of Ultrasonic Sensor for can radius
+const int pingPin2 = 9; // Trigger Pin of Ultrasonic Sensor for door blocked status
+const int echoPin2 = 10; // Echo Pin of Ultrasonic Sensor for door blocked status
+const int BUTTON_PIN1 = 7;
+const int BUTTON_PIN2 = 22;
+
+const int RELAY_PIN1  = 3;
+boolean isUnlocked = false;
+boolean isFull = false;
+
+
+const int doorFlapDistance = 15;  //distance from ultrasonic sensor from trash can door.
+const int toleranceDistance = 1;
+const int canRadius = 15;  //trash can radius
+int waitTime = 1000  ; //Number of miliseconds to delay
+//int fillCounter = 0; 
+//int maxFillCounter = 5;  //number of milli-seconds (from waitTime) an object obstructs the fill sensor until the door is considered blocked.
+                          //see checkFull function
+
+SharpIR mySensor = SharpIR(IRPin, model);
+ezButton button1(BUTTON_PIN1);
+ezButton pixiebutton(BUTTON_PIN2);
+LiquidCrystal lcd(rs, en, d4, d5, d6, d7);
+
+void setup() {
+  Serial.begin(9600);         // initialize serial
+  
+  pinMode(RELAY_PIN1, OUTPUT);
+  pinMode(ledPin, OUTPUT);
+  pinMode(pingPin1, OUTPUT);
+  pinMode(echoPin1, INPUT);
+  pinMode(pingPin2, OUTPUT);
+  pinMode(echoPin2, INPUT);
+  button1.setDebounceTime(50);
+
+  digitalWrite(RELAY_PIN1, HIGH);
+  digitalWrite(ledPin, LOW);// unlock the door
+  analogWrite(44,60);
+  lcd.begin(16, 2);
+  lcd.print("Scan Your Item");
+
+}
+
+void loop() {
+  button1.loop();
+  pixiebutton.loop();
+
+  lcd.setCursor(0, 1);  
+  long UltraSonicDistance1 = getUltraSonicDistance(pingPin1,echoPin1);  //distance for fill ultrasonic sensor
+  long UltraSonicDistance2 = getUltraSonicDistance(pingPin2,echoPin2);  //distance for door blocked ultrasonic sensor
+  long IRDistance = getIRDistance();  //IR distance
+  Serial.print("Ultrasonic distance1: ");
+  Serial.print(UltraSonicDistance1);
+  Serial.print(" Ultrasonic distance2: ");
+  Serial.print(UltraSonicDistance2);
+  Serial.print(" IR Distance: ");
+  Serial.println(IRDistance);
+  
+  if(pixiebutton.isPressed() && !isFull){  //pixie button is a placaholder for pixie scan, replace button press with pixie scan
+    lcd.clear();
+    lcd.print("Scanning...");
+    delay(5000); // replace with pixie scanning time
+  
+     if(checkFull(UltraSonicDistance1,IRDistance)){  //checks if the trash can is full
+  
+       digitalWrite(ledPin,HIGH);    //turn on the LED
+       digitalWrite(RELAY_PIN1, HIGH);  //lock the door
+       isUnlocked = false;
+       isFull = true;
+       lcd.clear();
+       lcd.print("trashcan full");
+      
+    
+       }
+     else{
+       digitalWrite(RELAY_PIN1, LOW); //unlock the door 
+       isUnlocked = true;
+        lcd.clear();
+        lcd.print("Place item in unlocked bin");
+       boolean doorblocked = true;
+       delay(5000);
+       while(doorblocked){      //checks if the door is blocked
+         digitalWrite(ledPin,HIGH); 
+         long UltraSonicDistance2 = getUltraSonicDistance(pingPin2,echoPin2); 
+         doorblocked = checkDoorBlocked(UltraSonicDistance2,isUnlocked);
+         
+       }
+      
+       digitalWrite(ledPin,LOW);    //turn off the LED
+       digitalWrite(RELAY_PIN1, HIGH);  //lock the door
+       isUnlocked = false;
+       lcd.clear();
+       lcd.print(":)");
+        delay(5000); 
+       lcd.clear();
+       lcd.print("Scan your item");
+      }
+      
+    }
+    
+  
+  
+  
+  if(button1.isPressed()) {   //checks if the reset button has been pushed
+    
+    digitalWrite(RELAY_PIN1, LOW); //unlock the door 
+    digitalWrite(ledPin, LOW);// turn off the LED 
+    isUnlocked = true;
+    isFull = false;
+    lcd.clear();
+    lcd.print("Scan Your Item");
+    
+
+  }
+ 
+  }
+
+
+boolean checkFull(long UltraSonicDistance1, long IRDistance){  //function that checks if the trash can is full
+  
+  if(UltraSonicDistance1 < canRadius && IRDistance < canRadius){ //checks if the fill ultrasonic sensor is blocked
+      lcd.clear();
+      lcd.print("Trascan full");
+
+          return true; 
+
+  }
+  return false;
+
+}
+
+boolean checkDoorBlocked(long UltraSonicDistance2, boolean isUnlocked ){   //check if door is blocked. 
+ 
+  if(isUnlocked){  //Checks if the door is currently unlocked.
+
+    if((UltraSonicDistance2 < abs(doorFlapDistance-toleranceDistance) || (UltraSonicDistance2>doorFlapDistance))){  //returns true if the distance between the door blocked ultra
+                                                                        //sonic sensor and the door flap exceeds normal bounds.
+      return true;
+  }
+  } 
+  return false;
+}
+
+    
+
+long getUltraSonicDistance(int pingPin,int echoPin){   //gets the distance from either ultrasonic sensor.
+   long duration, inches, cm;
+   digitalWrite(pingPin, LOW);
+   delayMicroseconds(2);
+   digitalWrite(pingPin, HIGH);
+   delayMicroseconds(10);
+   digitalWrite(pingPin, LOW);
+   duration = pulseIn(echoPin, HIGH);
+   cm = microsecondsToCentimeters(duration);
+   return cm;
+}
+
+double getIRDistance(){                             //gets the distance from the ir sensor.
+  return mySensor.distance();
+}
+
+long microsecondsToCentimeters(long microseconds) {   //converts microseconds to cm for the ultrasonic sensor.
+   return microseconds / 29 / 2;
+}
