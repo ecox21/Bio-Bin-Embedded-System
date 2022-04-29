@@ -1,5 +1,5 @@
 include <Pixy2.h>
-
+int led=1;
 
 
 // This is the main Pixy object 
