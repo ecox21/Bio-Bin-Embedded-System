@@ -43,8 +43,9 @@ void setup() {
   button1.setDebounceTime(50);
 
   digitalWrite(RELAY_PIN1, HIGH);
-  digitalWrite(ledPin, LOW);// unlock the door
-  analogWrite(44,60);
+  digitalWrite(ledPin, LOW);// lock the door, turn off the fill/door blocked light
+  
+  analogWrite(44,60); //set up the lcd
   lcd.begin(16, 2);
   lcd.print("Scan Your Item");
 
@@ -89,9 +90,9 @@ void loop() {
        boolean doorblocked = true;
        delay(5000);
        while(doorblocked){      //checks if the door is blocked
-         digitalWrite(ledPin,HIGH); 
+         digitalWrite(ledPin,HIGH);  //turn on door blocked led
          long UltraSonicDistance2 = getUltraSonicDistance(pingPin2,echoPin2); 
-         doorblocked = checkDoorBlocked(UltraSonicDistance2,isUnlocked);
+         doorblocked = checkDoorBlocked(UltraSonicDistance2,isUnlocked);  //keep checking if the door is blocked, only lock the door when unblocked
          
        }
       
