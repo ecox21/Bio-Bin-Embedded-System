@@ -58,7 +58,7 @@ void loop() {
   long UltraSonicDistance1 = getUltraSonicDistance(pingPin1,echoPin1);  //distance for fill ultrasonic sensor
   long UltraSonicDistance2 = getUltraSonicDistance(pingPin2,echoPin2);  //distance for door blocked ultrasonic sensor
   long IRDistance = getIRDistance();  //IR distance
-  Serial.print("Ultrasonic distance1: ");
+  Serial.print("Ultrasonic distance1: ");  //line 61-66 are for testing, feel free to delete in final code.
   Serial.print(UltraSonicDistance1);
   Serial.print(" Ultrasonic distance2: ");
   Serial.print(UltraSonicDistance2);
