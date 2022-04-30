@@ -18,9 +18,9 @@ boolean isUnlocked = false;
 boolean isFull = false;
 
 
-const int doorFlapDistance = 30;  //distance from ultrasonic sensor from trash can door.
+const int doorFlapDistance = 15;  //distance from ultrasonic sensor from trash can door.
 const int toleranceDistance = 1;
-const int canRadius = 30;  //trash can radius
+const int canRadius = 15;  //trash can radius
 int waitTime = 1000  ; //Number of miliseconds to delay
 //int fillCounter = 0; 
 //int maxFillCounter = 5;  //number of milli-seconds (from waitTime) an object obstructs the fill sensor until the door is considered blocked.
@@ -47,7 +47,6 @@ void setup() {
   
   analogWrite(44,60); //set up the lcd
   lcd.begin(16, 2);
-  lcd.setCursor(0, 0);  
   lcd.print("Scan Your Item");
 
 }
@@ -55,8 +54,8 @@ void setup() {
 void loop() {
   button1.loop();
   pixiebutton.loop();
-  lcd.setCursor(0, 0);  
- 
+
+   
   long UltraSonicDistance1 = getUltraSonicDistance(pingPin1,echoPin1);  //distance for fill ultrasonic sensor
   long UltraSonicDistance2 = getUltraSonicDistance(pingPin2,echoPin2);  //distance for door blocked ultrasonic sensor
   long IRDistance = getIRDistance();  //IR distance
@@ -69,6 +68,7 @@ void loop() {
   
   if(pixiebutton.isPressed() && !isFull){  //pixie button is a placaholder for pixie scan, replace button press with pixie scan
     lcd.clear();
+    delay(10);
     lcd.print("Scanning...");
     delay(5000); // replace with pixie scanning time
   
@@ -79,21 +79,25 @@ void loop() {
        isUnlocked = false;
        isFull = true;
        lcd.clear();
-       lcd.print("trashcan full");
+       delay(10);
+       lcd.print("trash full");
       
     
        }
      else{
        digitalWrite(RELAY_PIN1, LOW); //unlock the door 
        isUnlocked = true;
-        lcd.clear();
-        lcd.print("Place item in");
-        lcd.setCursor(0, 1);  
-        lcd.print("unlocked bin");
+       lcd.clear();
+       delay(10);
+       lcd.print("Place item in");
+       lcd.setCursor(0,1);
+       delay(10);
+       lcd.print("unlocked bin");
        boolean doorblocked = true;
+       digitalWrite(ledPin,HIGH);  //turn on door blocked led
        delay(5000);
        while(doorblocked){      //checks if the door is blocked
-         digitalWrite(ledPin,HIGH);  //turn on door blocked led
+         
          long UltraSonicDistance2 = getUltraSonicDistance(pingPin2,echoPin2); 
          doorblocked = checkDoorBlocked(UltraSonicDistance2,isUnlocked);  //keep checking if the door is blocked, only lock the door when unblocked
          
@@ -103,11 +107,11 @@ void loop() {
        digitalWrite(RELAY_PIN1, HIGH);  //lock the door
        isUnlocked = false;
        lcd.clear();
-       lcd.setCursor(0, 0);  
-
+       delay(10);
        lcd.print(":)");
         delay(5000); 
        lcd.clear();
+       delay(10);
        lcd.print("Scan your item");
       }
       
@@ -123,6 +127,7 @@ void loop() {
     isUnlocked = true;
     isFull = false;
     lcd.clear();
+    delay(10);
     lcd.print("Scan Your Item");
     
 
@@ -135,6 +140,7 @@ boolean checkFull(long UltraSonicDistance1, long IRDistance){  //function that c
   
   if(UltraSonicDistance1 < canRadius && IRDistance < canRadius){ //checks if the fill ultrasonic sensor is blocked
       lcd.clear();
+      delay(10);
       lcd.print("Trascan full");
 
           return true; 
