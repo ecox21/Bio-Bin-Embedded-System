@@ -1,4 +1,6 @@
-include <Pixy2.h>
+
+
+#include <Pixy2.h>
 int led=1;
 
 
@@ -22,17 +24,27 @@ void loop()
   
   // If there are detect blocks, print them!
   if (pixy.ccc.numBlocks)
-  {
+     {
+    delay(2000);
     digitalWrite(led,HIGH);
     Serial.print("Detected ");
     Serial.println(pixy.ccc.numBlocks);
-    for (i=0; i<pixy.ccc.numBlocks; i++)
-    {
-      Serial.print("  block ");
-      Serial.print(i);
-      Serial.print(": ");
-      pixy.ccc.blocks[i].print();
-    }
-  }
-  digitalWrite(led,LOW);  
+       for (i=0; i<pixy.ccc.numBlocks; i++)
+        {
+          Serial.print("  block ");
+          Serial.print(i);
+          Serial.print(": ");
+          pixy.ccc.blocks[i].print();
+        }
+     }
+      else if (!pixy.ccc.numBlocks)
+      {
+        delay(2000);
+        digitalWrite(led,LOW);
+       }
+      else
+      {
+      digitalWrite(led,LOW);
+      }
+  
 }
